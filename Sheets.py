@@ -389,7 +389,7 @@ def remove_font_color_from_cell(worksheet, row, column):
     if isinstance(column, int):
         # Convert to letter
         number_to_letter(column)
-    cell_range = f"{column}{row}"
+    cell_range = f"{column}{row}" # s
 
     # Get the existing cell properties
     cell_properties = worksheet.cell(row, worksheet.find(column).col)
