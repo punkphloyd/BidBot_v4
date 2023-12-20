@@ -346,53 +346,26 @@ def set_cell_red(sheet, col, row):
 
 # This function removes the font colour from a row (part of the 65+/65- management)
 def remove_row_font_color(sheet, row):
-    tmplock = 0
-    if tmplock == 1:    # lock this portion of the code away - from a previous attempt at implementation (keeping in case further updates work better with this methodology)
-        try:
 
-            # Prepare the update request to clear font color formatting
-            request = {
-                'requests': [
-                    {
-                        'updateCells': {
-                            'range': {
-                                'sheetId': sheet.id,
-                                'startRowIndex': row,  # Adjust as needed
-                                'endRowIndex': row,  # Adjust as needed
-                                'startColumnIndex': 0,  # Adjust as needed
-                                'endColumnIndex': 10  # Adjust as needed
-                            },
-                            'fields': 'userEnteredFormat.textFormat.foregroundColor'
-                        }
-                    }
-                ]
-            }
+    # Loop through columns B->Z and individually remove any font colour
+    # This process will be slower than other methods but more reliable
+    # If number of parallel bids expands above ~12 this will need to be expanded accordingly
+    for letter in range(ord('B'), ord('Z') + 1):
+        cell = f"{letter}{row}"
+        if debug_mode:
+            print(f"Cell to remove colour: {cell}")
+        remove_font_color_from_cell(sheet, row, letter)
 
-            # Make the update request
-            request = sheet.batchUpdate(spreadsheetId=spreadsheet_id, body=request)
-            response = request.execute()
 
-            print(f"Font color formatting removed from the row: {row}")
+# Removes font colour from a single cell
+def remove_font_color_from_cell(worksheet, row, column):
+    """
+    Remove font color from the specified cell in the worksheet.
+    :param worksheet: The worksheet object.
+    :param row: Row index (1-based).
+    :param column: Column index or column letter.
+    """
+    cell_range = f"{column}{row}"
 
-        except exceptions.DefaultCredentialsError:
-            print("Google Sheets API credentials not found. Please provide valid credentials.")
-
-    else:
-        # This is the presently working implementation to remove font colour formatting from a row of cells
-        range_to_update = f"B{row}:Z{row}"
-        format_req = {
-            "userEnteredFormat": {
-                "textFormat": {"foregroundColor": None}  # Set foregroundColor to None for default black color
-            }
-        }
-        requests = [
-            {
-                'repeatCell': {
-                    'range': f'{sheet.title}!B{row}:Z{row}',
-                    'cell': {'userEnteredFormat': {'textFormat': {'foregroundColor': None}}},
-                    'fields': 'userEnteredFormat.textFormat.foregroundColor'
-                }
-            }
-        ]
-
-        sheet.batch_update(requests)
+    # Remove font color for the specified cell
+    worksheet.update(cell_range, '', 'USER_ENTERED', {'textFormat': {'foregroundColor': None}})
