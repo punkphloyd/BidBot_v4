@@ -6,10 +6,11 @@ from utils import debug_mode, letter_to_number, number_to_letter
 from datetime import datetime
 from api_keys import *
 
-# Set up credentials
-credentials = service_account.Credentials.from_service_account_file("C:\\Users\\jarya\\PycharmProjects\\BidBot_v2/\\sheets_creds_v3.json", scopes=["https://www.googleapis.com/auth/spreadsheets"])
+# Set up credentials used to connect my bidbot google service to the google sheets api
+credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=["https://www.googleapis.com/auth/spreadsheets"])
 
-bids_index = 2  # Worksheet number within main google sheets (need to update if extra sheets added)
+# Worksheet numbers within main google sheets (need to update if extra sheets added)
+bids_index = 2
 roster_index = 0
 points_index = 4
 
@@ -18,12 +19,13 @@ bids = gspread.authorize(credentials).open_by_key(spreadsheet_id).get_worksheet(
 roster = gspread.authorize(credentials).open_by_key(spreadsheet_id).get_worksheet(roster_index)
 points = gspread.authorize(credentials).open_by_key(spreadsheet_id).get_worksheet(points_index)
 
+# These return embedded lists containing all the rows, and their entries
 bids_values = bids.get_all_values()
 roster_values = roster.get_all_values()
 points_values = points.get_all_values()
 
 
-# Function to get font text color from a specific cell
+# Function to get font text color from a specific cell (row/col definition) on a specific worksheet
 def get_font_color(row, col, worksheet):
     service = build("sheets", "v4", credentials=credentials)
     sheet = service.spreadsheets()
@@ -43,6 +45,7 @@ def get_font_color(row, col, worksheet):
         return 'N/A'
 
 
+# function to return the value from a single cell (specified by worksheet, row, and column)
 def read_cell(row, col, worksheet):
     # Get the value from the specified cell
     value = worksheet.cell(row, col).value
@@ -94,6 +97,7 @@ def check_points(player, points_in):
 
 
 # Single function to carry out all checks and collect any errors accordingly
+# This bid has not been revisited since the sheets refactoring
 def check_bid(player, item, points_in):
     # Date format to add to log file name (YYYYMMDD)
     date_now = datetime.now()
@@ -257,16 +261,16 @@ def update_bids(item, dicto):
         if debug_mode:
             print(f"Updated cell: {updated_cell}")
 
-    # Convert dictionary to list to update spreadsheet
-    # List needs to be 2-d to work with 'request' line below
-    #bid_list = [list(functools.reduce(lambda x, y: x + y, dicto.items()))]
+    # Sort bid list based on number of points
     bid_list = dict(sorted(dicto.items(), key=lambda tmp_item: tmp_item[1][0], reverse=True))
-    #
+
     if debug_mode:
         print("Printing bid_list")
         print(bid_list)
+    # Formatting dictionary for red
     red_colour = {'red': 1}
 
+    # Lists to store bid point values and a 0/1 list for cells needing to be red-font
     values = []
     red_track = []
     for item in bid_list:
@@ -276,16 +280,14 @@ def update_bids(item, dicto):
     print(values)
     values_list = [values]
     print(red_track)
-    # Execute request for spreadsheet update
-    #
-    #request = bids.update(spreadsheetId=spreadsheet_id, range=f"Bids!{updated_cell}", valueInputOption="RAW", body={"values": values}).execute()
+
     try:
-        # Update values
+        # Update values via the 'update' function
         request = bids.update(range_notation, values_list)
-        # Set all row to black text
+        # Set all cells in the specified row to black text (will convert only required ones to red text)
         remove_row_font_color(bids, row)
         # Update required entries to red ink
-        red_col = 3
+        red_col = 3         # Start at 3 (this represents the first column with a numerical bid value in it - column C)
         for iterator in red_track:
             if iterator == 1:
                 red_col_let = number_to_letter(red_col)
@@ -293,19 +295,13 @@ def update_bids(item, dicto):
 
             red_col = red_col + 2
 
-    #col_tally = 3
-    #for item in red_track:
-    #    if item == 1:
-    #        # Update colour of cell corresponding to {col_tally}{row} (e.g. C7, E7, etc.) to red
-    #        set_cell_colour(bids, col_tally, row, red_colour)
-    #    col_tally = col_tally + 2
     except exceptions.DefaultCredentialsError:
         print("Google Sheets API credentials not found. Please provide valid credentials.")
-
 
     return
 
 
+# Set a colour (RGB dictionary defined) to a specific cell of a worksheet
 def set_cell_colour(sheet, col, row, colour):
     body = {
         'requests': [
@@ -340,6 +336,7 @@ def set_cell_colour(sheet, col, row, colour):
     response = request.execute()
 
 
+# Colour the text of a single cell red, defined by sheet column row
 def set_cell_red(sheet, col, row):
     cell_range = f"{col}{row}"
     red_colour = {"userEnteredFormat": {"textFormat": {"foregroundColor": {"red": 1, "green": 0, "blue": 0}}}}
@@ -347,9 +344,10 @@ def set_cell_red(sheet, col, row):
     return
 
 
+# This function removes the font colour from a row (part of the 65+/65- management)
 def remove_row_font_color(sheet, row):
     tmplock = 0
-    if tmplock == 1:
+    if tmplock == 1:    # lock this portion of the code away - from a previous attempt at implementation (keeping in case further updates work better with this methodology)
         try:
 
             # Prepare the update request to clear font color formatting
@@ -380,6 +378,7 @@ def remove_row_font_color(sheet, row):
             print("Google Sheets API credentials not found. Please provide valid credentials.")
 
     else:
+        # This is the presently working implementation to remove font colour formatting from a row of cells
         range_to_update = f"B{row}:Z{row}"
         format_req = {
             "userEnteredFormat": {
