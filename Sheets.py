@@ -301,38 +301,34 @@ def update_bids(item, dicto):
 
 # Set a colour (RGB dictionary defined) to a specific cell of a worksheet
 def set_cell_colour(sheet, col, row, colour):
+    cell_range = f"{chr(64 + col)}{row}"  # Convert column index to letter (assuming A=1, B=2, ..., Z=26)
+
     body = {
         'requests': [
             {
-                'updateCells': {
-                    'rows': [
-                        {
-                            'values': [
-                                {
-                                    'userEnteredFormat': {
-                                        'textFormat': {
-                                            'foregroundColor': colour
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                    'fields': 'userEnteredFormat.textFormat.foregroundColor',
-                    'start': {
+                'repeatCell': {
+                    'range': {
                         'sheetId': sheet.id,
-                        'rowIndex': row,  # Convert 'A1' to row index
-                        'columnIndex': col  # Convert 'A' to column index
-                    }
+                        'startRowIndex': row - 1,  # 0-indexed row
+                        'endRowIndex': row,
+                        'startColumnIndex': col - 1,  # 0-indexed column
+                        'endColumnIndex': col,
+                    },
+                    'cell': {
+                        'userEnteredFormat': {
+                            'textFormat': {
+                                'foregroundColor': colour
+                            }
+                        }
+                    },
+                    'fields': 'userEnteredFormat.textFormat.foregroundColor',
                 }
             }
         ]
     }
 
     # Make the update request
-    request = bids.spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id, body=body)
-    response = request.execute()
-
+    request = sheet.spreadsheet.batch_update(body)
 
 # Colour the text of a single cell red, defined by sheet column row
 def set_cell_red(sheet, col, row):
