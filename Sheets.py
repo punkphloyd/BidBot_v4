@@ -332,28 +332,35 @@ def set_cell_colour(sheet, col, row, colour):
 
 # Colour the text of a single cell red, defined by sheet column row
 def set_cell_red(sheet, col, row):
-    # Test to check if col has been given as a number
-    if isinstance(col, int):
-        # Convert to letter
-        number_to_letter(col)
+    cell_range = f"{chr(64 + col)}{row}"  # Convert column index to letter (assuming A=1, B=2, ..., Z=26)
 
-    cell_range = f"{col}{row}"
-    # Get the existing content of the cell
-    existing_content = sheet.cell(row, sheet.find(col).col).value
-
-    # Define the red color dictionary
-    red_colour = {
-        "textFormat": {
-            "foregroundColor": {
-                "red": 1,
-                "green": 0,
-                "blue": 0
+    colour = {'red': 1, 'blue': 0, 'green': 0}
+    body = {
+        'requests': [
+            {
+                'repeatCell': {
+                    'range': {
+                        'sheetId': sheet.id,
+                        'startRowIndex': row - 1,  # 0-indexed row
+                        'endRowIndex': row,
+                        'startColumnIndex': col - 1,  # 0-indexed column
+                        'endColumnIndex': col,
+                    },
+                    'cell': {
+                        'userEnteredFormat': {
+                            'textFormat': {
+                                'foregroundColor': colour
+                            }
+                        }
+                    },
+                    'fields': 'userEnteredFormat.textFormat.foregroundColor',
+                }
             }
-        }
+        ]
     }
 
-    # Update the cell content and apply the red color format
-    sheet.update(cell_range, existing_content, 'USER_ENTERED', red_colour)
+    # Make the update request
+    request = sheet.spreadsheet.batch_update(body)
 
     return
 
