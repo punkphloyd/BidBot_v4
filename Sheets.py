@@ -37,7 +37,7 @@ def get_font_color(row, col, worksheet):
     response = request.execute()
     user_entered_format = response.get('sheets', [])[0].get('data', [{}])[0].get('rowData', [{}])[0].get('values', [{}])[0].get('userEnteredFormat', {}).get('textFormat', {})
     print(user_entered_format)
-    if 'foregroundColor' in user_entered_format:
+    if 'foregroundColor' in user_entered_format and len(user_entered_format['foregroundColor']) != 0:
         text_colour = user_entered_format['foregroundColor']
         return text_colour
     else:
@@ -330,6 +330,7 @@ def set_cell_colour(sheet, col, row, colour):
     # Make the update request
     request = sheet.spreadsheet.batch_update(body)
 
+
 # Colour the text of a single cell red, defined by sheet column row
 def set_cell_red(sheet, col, row):
     cell_range = f"{chr(64 + col)}{row}"  # Convert column index to letter (assuming A=1, B=2, ..., Z=26)
@@ -363,6 +364,7 @@ def set_cell_red(sheet, col, row):
     request = sheet.spreadsheet.batch_update(body)
 
     return
+
 
 # This function removes the font colour from a row (part of the 65+/65- management)
 def remove_row_font_color(sheet, row):

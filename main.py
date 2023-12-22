@@ -29,4 +29,4 @@ for i in range(0, 3):
 print(get_font_color(6, 3, bids))
 for row in range(1, 6):
     for col in range(1, 6):
-        remove_font_color_from_cell(bids, row, col)
+        print(get_font_color(row, col, bids))
