@@ -36,7 +36,7 @@ def get_font_color(row, col, worksheet):
     request = service.spreadsheets().get(spreadsheetId=spreadsheet_id, ranges=[cell_range], fields="sheets/data/rowData/values/userEnteredFormat/textFormat")
     response = request.execute()
     user_entered_format = response.get('sheets', [])[0].get('data', [{}])[0].get('rowData', [{}])[0].get('values', [{}])[0].get('userEnteredFormat', {}).get('textFormat', {})
-    print(user_entered_format)
+
     if 'foregroundColor' in user_entered_format and len(user_entered_format['foregroundColor']) != 0:
         text_colour = user_entered_format['foregroundColor']
         return text_colour
