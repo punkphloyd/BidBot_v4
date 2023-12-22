@@ -379,35 +379,34 @@ def remove_row_font_color(sheet, row):
 
 
 # Removes font colour from a single cell
-def remove_font_color_from_cell(worksheet, row, column):
-    """
-    Remove font color from the specified cell in the worksheet.
-    :param worksheet: The worksheet object.
-    :param row: Row index (1-based).
-    :param column: Column index or column letter.
-    """
-    # Test to check if col has been given as a number
-    if isinstance(column, int):
-        # Convert to letter
-        number_to_letter(column)
-    cell_range = f"{column}{row}"
-    print(f"cell range = {cell_range}")
+def remove_font_color_from_cell(worksheet, row, col):
+    cell_range = f"{chr(64 + col)}{row}"  # Convert column index to letter (assuming A=1, B=2, ..., Z=26)
 
-    # Find the column index
-    cell_finder = worksheet.find(column)
+    colour = {'red': 0, 'blue': 0, 'green': 0}
+    body = {
+        'requests': [
+            {
+                'repeatCell': {
+                    'range': {
+                        'sheetId': worksheet.id,
+                        'startRowIndex': row - 1,  # 0-indexed row
+                        'endRowIndex': row,
+                        'startColumnIndex': col - 1,  # 0-indexed column
+                        'endColumnIndex': col,
+                    },
+                    'cell': {
+                        'userEnteredFormat': {
+                            'textFormat': {
+                                'foregroundColor': colour
+                            }
+                        }
+                    },
+                    'fields': 'userEnteredFormat.textFormat.foregroundColor',
+                }
+            }
+        ]
+    }
 
-    if cell_finder is None:
-        print(f"Column {column} not found in the worksheet.")
-
-    # Get the existing cell properties
-    cell_properties = worksheet.cell(row, worksheet.find(column).col)
-
-    # Extract existing format if available
-    existing_format = cell_properties.get('userEnteredFormat', {}).get('textFormat', {})
-
-    # Modify the existing format to remove font color
-    existing_format['foregroundColor'] = None
-
-    # Apply the modified format
-    worksheet.format(cell_range, {'userEnteredFormat': existing_format})
+    # Make the update request
+    request = worksheet.spreadsheet.batch_update(body)
 
