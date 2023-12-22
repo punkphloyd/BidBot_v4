@@ -8,6 +8,8 @@ from api_keys import *
 
 # Set up credentials used to connect my bidbot google service to the google sheets api
 credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+# Use the Google Sheets API to get cell properties
+service = build('sheets', 'v4', credentials=credentials)
 
 # Worksheet numbers within main google sheets (need to update if extra sheets added)
 bids_index = 2
@@ -26,24 +28,20 @@ points_values = points.get_all_values()
 
 
 # Function to get font text color from a specific cell (row/col definition) on a specific worksheet
+# Returns an RGB dictionary - logic within main functions to utilise this (if/else ['red'] exists, for example)
 def get_font_color(row, col, worksheet):
-    service = build("sheets", "v4", credentials=credentials)
-    sheet = service.spreadsheets()
 
-    # Specify the fields parameter to request only the formatting information
-    fields = "sheets(data.rowData.values(userEnteredFormat.textFormat.foregroundColor))"
-    result = sheet.get(spreadsheetId=spreadsheet_id, ranges=[f"{worksheet.title}!{chr(ord('A') + col - 1)}{row}"], fields=fields).execute()
-
-    # Extract the formatting information
-    try:
-        font_color = result['sheets'][0]['data'][0]['rowData'][0]['values'][0]['userEnteredFormat']['textFormat']['foregroundColor']
-        if any(key == 'red' for key in font_color.keys()):
-            return 1
-        else:
-            return 0
-    except KeyError:
+    cell = worksheet.cell(row, col)
+    cell_range = f"{worksheet.title}!{cell.address}"
+    request = service.spreadsheets().get(spreadsheetId=spreadsheet_id, ranges=[cell_range], fields="sheets/data/rowData/values/userEnteredFormat/textFormat")
+    response = request.execute()
+    user_entered_format = response.get('sheets', [])[0].get('data', [{}])[0].get('rowData', [{}])[0].get('values', [{}])[0].get('userEnteredFormat', {}).get('textFormat', {})
+    print(user_entered_format)
+    if 'foregroundColor' in user_entered_format:
+        text_colour = user_entered_format['foregroundColor']
+        return text_colour
+    else:
         return 'N/A'
-
 
 # function to return the value from a single cell (specified by worksheet, row, and column)
 def read_cell(row, col, worksheet):
@@ -389,7 +387,14 @@ def remove_font_color_from_cell(worksheet, row, column):
     if isinstance(column, int):
         # Convert to letter
         number_to_letter(column)
-    cell_range = f"{column}{row}" # s
+    cell_range = f"{column}{row}"
+    print(f"cell range = {cell_range}")
+
+    # Find the column index
+    cell_finder = worksheet.find(column)
+
+    if cell_finder is None:
+        print(f"Column {column} not found in the worksheet.")
 
     # Get the existing cell properties
     cell_properties = worksheet.cell(row, worksheet.find(column).col)
