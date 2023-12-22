@@ -39,9 +39,11 @@ def get_font_color(row, col, worksheet):
 
     if 'foregroundColor' in user_entered_format and len(user_entered_format['foregroundColor']) != 0:
         text_colour = user_entered_format['foregroundColor']
-        return text_colour
+        # return text_colour
+        return 1
     else:
-        return 'N/A'
+        return 0
+
 
 # function to return the value from a single cell (specified by worksheet, row, and column)
 def read_cell(row, col, worksheet):
@@ -183,13 +185,12 @@ def get_all_bids(item):
                 return None
             else:
                 bid_pairs_len = len(row) - 1 # Number of bid name+points cells is the total row length, less one for the item name
-                print(f"length:{bid_pairs_len}")
+
                 # Run over the length of the list and use every odd entry as a name (key) with the following even entry as the points bid (value)
                 for i in range(1, bid_pairs_len+1, 2):
                     col_no = col_no + 2
                     col_letter = number_to_letter(col_no)
                     fon_col = get_font_color(row_no, col_no, bids)
-                    print(f"{col_letter}{row_no}: {row[i+1]}")
                     if len(row[i+1].strip()) != 0:
                         bid_val_pair = [int(row[i+1]), fon_col]
                         all_bids[row[i]] = bid_val_pair
@@ -288,8 +289,7 @@ def update_bids(item, dicto):
         red_col = 3         # Start at 3 (this represents the first column with a numerical bid value in it - column C)
         for iterator in red_track:
             if iterator == 1:
-                red_col_let = number_to_letter(red_col)
-                set_cell_red(bids, red_col_let, row)
+                set_cell_red(bids, red_col, row)
 
             red_col = red_col + 2
 
@@ -375,9 +375,11 @@ def remove_row_font_color(sheet, row):
     for letter in range(ord('B'), ord('Z') + 1):
         letter = chr(letter)
         cell = f"{letter}{row}"
+        num_let = letter_to_number(letter)
         if debug_mode:
             print(f"Cell to remove colour: {cell}")
-        remove_font_color_from_cell(sheet, row, letter)
+
+        remove_font_color_from_cell(sheet, row, num_let)
 
 
 # Removes font colour from a single cell

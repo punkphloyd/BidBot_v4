@@ -12,21 +12,17 @@ random.seed(current_time)
 # This main.py is currently setup as a test enrivonment for the Sheets.py functionality
 # Tests how to implement she required sheets reading/writing
 
-# Test function to return values from specific range of cells - bids is the Bids worksheet in the Google sheets
-cell_list = bids.range("A1:A3")
-print(cell_list)
+# Test the addition of new bids, and the addition/persistence of font colours appropriately
+# Add some bids to the W Legs entry, one 65+ one <65
+# Also amended notique's bid to be <65 and confirm that this persists throughout the update
 
-# Standard font_colour dictionary for red text (only colour to be used in the bot)
-red_colour = {'red': 1, 'blue': 0, 'green': 0}
-blue_colour = {'red': 0, 'blue': 1, 'green': 0}
-green_colour = {'red': 0, 'blue': 0, 'green': 1}
-black_colour = {'red': 0.01, 'blue': 0.01, 'green': 0.01}
+# Get existing bids
+base_WL = get_all_bids("W Legs")
+print(base_WL)
 
-# Test the individual response for 'value' output on a single cell
-for i in range(0, 3):
-    print(cell_list[i].value)
+# Add new bids to base_WLegs
+base_WL['Punkphloyd'] = [8, 1]
+base_WL['Steve'] = [3, 0]
 
-print(get_font_color(6, 3, bids))
-for row in range(1, 6):
-    for col in range(1, 6):
-        print(get_font_color(row, col, bids))
+# Update spreadsheet to these bids
+update_bids("W Legs", base_WL)
