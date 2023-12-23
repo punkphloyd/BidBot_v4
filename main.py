@@ -2,6 +2,11 @@ from Sheets import *
 from api_keys import *
 import random
 import time
+import nextcord
+from nextcord.ext import commands, tasks
+import os
+from nextcord import Interaction
+
 
 # Get the current time as an integer
 current_time = int(time.time())
@@ -12,17 +17,84 @@ random.seed(current_time)
 # This main.py is currently setup as a test enrivonment for the Sheets.py functionality
 # Tests how to implement she required sheets reading/writing
 
-# Test the addition of new bids, and the addition/persistence of font colours appropriately
-# Add some bids to the W Legs entry, one 65+ one <65
-# Also amended notique's bid to be <65 and confirm that this persists throughout the update
+# Definition requirements to allow bot to interact appropriately in discord
+# If anything needs to be updated (e.g. admin-only commands) this would be adjusted accordingly
+intents = nextcord.Intents.default()
+intents.members = True
+intents.message_content = True
 
-# Get existing bids
-base_WL = get_all_bids("W Legs")
-print(base_WL)
+# Bot line - runs the bot
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Add new bids to base_WLegs
-base_WL['Punkphloyd'] = [8, 1]
-base_WL['Steve'] = [3, 0]
+# Bot start function - prints out to terminal to aid debugging if debug_mode is true
+# Also opens logging file appropriately
+@bot.event
+async def on_ready():
 
-# Update spreadsheet to these bids
-update_bids("W Legs", base_WL)
+    if debug_mode:
+        print(f"Bot connection commenced - test bot {ver}")
+        print("------------------------------")
+
+
+
+    # Testing bot capability to print out to server channel
+    channel = bot.get_channel(bids_channel_id)
+    print(channel)
+    #await channel.send("Bot starting up! Please place your bids")
+
+
+# Slash Command: Ping
+@bot.slash_command(name='ping', description='Replies with Pong!')
+async def ping(ctx):
+    await ctx.send('Pong!')
+
+
+# Bot fail/disconnect function - prints out to terminal to aid debugging if debug_mode is true
+# Report failure to log file
+@bot.event
+async def on_disconnect():
+
+    if debug_mode:
+        print(f"Bot connection failure - test bot {ver}")
+        print("------------------------------")
+
+
+
+# Bot close function - prints out to terminal to aid debugging if debug_mode is true
+# Report close to log file
+@bot.event
+async def on_close():
+    #
+    if debug_mode:
+        print(f"Bot closed - test bot {ver}")
+        print("------------------------------")
+
+
+
+# Now testing the addition of the discord bot interface
+# Test job for schedule-driver output
+# This job will print to the new-test-channel
+def print_job():
+    print("test job print - alternate")
+    channel = bot.get_channel(meltdown_bids_test_channel_id)
+    date_time = datetime.now()
+    print(channel)
+    channel.send(f"Sending alternate message @ {date_time}")
+
+    channel.send("alternate test")
+
+
+# Simple test command - remove prior to pushing production version
+@bot.slash_command(guild_ids=[server_id], name="test", description="Slash commands test")
+async def test(interaction: Interaction):
+    player = interaction.user.display_name  # Get player name from discord user displayname
+    await interaction.response.send_message(f"Hello, this is a test output initiatied by {player}")
+    #print_job()
+
+
+# Load relevant cogs to support bot
+bot.load_extension("cogs.Bids")
+
+# Run bot from main
+if __name__ == '__main__':
+    bot.run(BOT_TOKEN)
