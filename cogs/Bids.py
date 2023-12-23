@@ -3,11 +3,11 @@ from api_keys import server_id
 from nextcord.ext import commands, tasks
 from nextcord import Interaction
 from nextcord.ui import Select, View
-# from SkyGodButtons import *
-# from AreaButtons import *
-# from SeaGodButtons import *
-# from DynaButtons import *
-# from HENMButtons import *
+from SkyGodButtons import *
+from AreaButtons import *
+from SeaGodButtons import *
+from DynaButtons import *
+from HENMButtons import *
 from datetime import date, time, datetime
 import time
 from Sheets import *
@@ -81,8 +81,8 @@ class Bids(commands.Cog):
             if debug_mode:
                 print(f"{interaction.user.display_name} has the role {role} - may successfully use the /bid function")
         else:
+            await interaction.send("You must be an admin to use this command")
             if debug_mode:
-                await interaction.send("You must be an admin to use this command")
                 print(f"{interaction.user.display_name} does not have the role {role} - may not use the /bid function")
             return
 
@@ -134,10 +134,13 @@ class Bids(commands.Cog):
             if debug_mode:
                 print(f"{interaction.user.display_name} has the role {role} - may successfully use the /bid function")
         else:
+            await interaction.send("You must be an admin to use this command")
             if debug_mode:
-                await interaction.send("You must be an admin to use this command")
                 print(f"{interaction.user.display_name} does not have the role {role} - may not use the /bid function")
             return
+
+        if debug_mode:
+            print("Bid2 Function Debugging")
 
         view = BidButtons()  # Output for Sky/Sea etc. choice
         view2 = None  # To be re-assigned later, pending initial EG Area choice
