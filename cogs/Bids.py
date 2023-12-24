@@ -222,7 +222,157 @@ class Bids(commands.Cog):
                 await interaction.followup.send("Which Seiryu drops would you like to bid on?", view=view3)
                 await view3.wait()
         ###########################
+        # User selects HENM option in first button options
+        elif view.value == 'HENM':
+            if debug_mode:
+                print("HENM has been selected")
+            view2 = HENMButtons()
+            await interaction.followup.send("Which HENM  would you like?", view=view2)
+            await view2.wait()
+            if view2 == 'Rocs':
+                if debug_mode:
+                    print("Rocs has been selected")
+                view3 = RocsButtons()
+                await interaction.followup.send("Which Ruinous Rocs drops would you like to bid on?", view=view3)
+                await view3.wait()
+            elif view2 == 'Decapod':
+                if debug_mode:
+                    print("Decapods has been selected")
+                view3 = RocsButtons()
+                await interaction.followup.send("Which Despotic Decapods drops would you like to bid on?", view=view3)
+                await view3.wait()
 
+        ###########################
+        # User selects sea option in first button options
+        elif view.value == 'Sea':
+            if debug_mode:
+                print("Sea has been selected")
+            view2 = SeaButtons()
+            await interaction.followup.send("Which sea boss would you like?", view=view2)
+            await view2.wait()
+            if view2.god == 'AV':
+                if debug_mode:
+                    print("AV has been selected")
+                view3 = AVButtons()
+                await interaction.followup.send("Which Absolute Virtue drops would you like to bid on?", view=view3)
+                await view3.wait()
+
+            if view2.god == 'Love':
+                if debug_mode:
+                    print("JoL has been selected")
+                view3 = LoveButtons()
+                await interaction.followup.send("Which Love drops would you like to bid on?", view=view3)
+                await view3.wait()
+
+            if view2.god == 'Justice':
+                if debug_mode:
+                    print("JoJ has been selected")
+                view3 = JusticeButtons()
+                await interaction.followup.send("Which Justice drops would you like to bid on?", view=view3)
+                await view3.wait()
+
+            if view2.god == 'Hope':
+                if debug_mode:
+                    print("JoH has been selected")
+                view3 = HopeButtons()
+                await interaction.followup.send("Which Hope drops would you like to bid on?", view=view3)
+                await view3.wait()
+
+            if view2.god == 'Prudence':
+                if debug_mode:
+                    print("JoP has been selected")
+                view3 = PrudenceButtons()
+                await interaction.followup.send("Which Prudence drops would you like to bid on?", view=view3)
+                await view3.wait()
+
+            if view2.god == 'Fortitude':
+                if debug_mode:
+                    print("JoFort has been selected")
+                view3 = FortitudeButtons()
+                await interaction.followup.send("Which Fortitude drops would you like to bid on?", view=view3)
+                await view3.wait()
+
+            if view2.god == 'Temperance':
+                if debug_mode:
+                    print("JoT has been selected")
+                view3 = TemperanceButtons()
+                await interaction.followup.send("Which Temperance drops would you like to bid on?", view=view3)
+                await view3.wait()
+
+            if view2.god == 'Faith':
+                if debug_mode:
+                    print("JoFaith has been selected")
+                view3 = FaithButtons()
+                await interaction.followup.send("Which Faith drops would you like to bid on?", view=view3)
+                await view3.wait()
+
+            if view2.god == 'Ix\'aern':
+                if debug_mode:
+                    print("Ixaerns has been selected")
+                view3 = IxaernButtons()
+                await interaction.followup.send("Which Ix'Aern drops would you like to bid on?", view=view3)
+                await view3.wait()
+        ###########################
+
+        # User selects dynamis option in first button options
+        # They are then offered choice of Dyna Lord vs Dyna Tav vs Job Relics
+        # Dyna Lord / Tav implementation not properly coded yet
+        # If user selects Job they are offered choice from Head-Feet, Acc, Head-1 - Feet-1
+        # This is then combined to, e.g., BRD Feet, or MNK Head -1 this should then match up with the spreadsheet (once punk has updated spreadsheet accordingly)
+
+        elif view.value == 'Dynamis':
+            if debug_mode:
+                print("Dynamis has been selected")
+            view2 = DynaButtons()
+            await interaction.followup.send("Which dynamis drops would you like to view?", view=view2)
+            await view2.wait()
+
+            # Not Dyna-Lord / Dyna-Tav == Relic pieces
+            if not view2.god == 'Dynamis-Lord' and not view2.god == 'Dyna-Tav':
+                if debug_mode:
+                    print("Job relic has been selected")
+                view3 = RelicButtons()
+                await interaction.followup.send("Which relic piece would you like to view?", view=view3)
+                await view3.wait()
+
+                if debug_mode:
+                    relic_drop = str(view2.god) + " " + str(view3.drop)
+                    print(f"{relic_drop}")
+            elif view2.god == 'Dynamis-Lord':  # If User selects Dyna Lord button, bring up dyna lord drops
+                view3 = DynaLButtons()
+            else:  # Else, only other option is Dyna-Tav - bring up dyna tav
+                view3 = DynaTButtons()
+
+        # For relic, bid item is concatenation of job and piece (e.g. MNK Legs / RDM Head -1)
+        if view.value == 'Dynamis' and not view2.god == 'Dynamis-Lord' and not view2.god == 'Dyna-Tav':
+            bid_item = str(view2.god) + " " + str(view3.drop)
+
+        else:
+            bid_item = view3.drop  # Has this been coded fully in DynaButtons.py? Need to check
+        if debug_mode:
+            print(bid_item)
+
+        if debug_mode:
+            print(f"{player} has bid {bid_points} points on item {view3.drop} at {bid_time}")
+
+        # Print bid details to log file
+        print(f"{player} has bid {bid_points} points on item {view3.drop} at {bid_time}", file=open(log_filename, 'a'))
+
+        # Check player and item exist (achieved with check_bid and dummy 0 points)
+        # Points check must occur at point of application (otherwise would be possible for players to submit multiple bids
+        # that (individually) they have points for, but cumulatively they do not
+        bid_success, message_out = check_bid(player, bid_item, 0)
+        if bid_success:
+            await interaction.response.send_message(f"{player} has successfully placed a pending bid of {points} points on {bid_item} - Note the points check will occur at the time of application")
+            bid = [bid_time_month, bid_time_date, bid_time_hm, player, bid_item, bid_points, bid_level]
+            if debug_mode:
+                print(f"Bid to be written: {bid}")
+            bid_write(bid)
+
+        else:
+            await interaction.response.send_message(f"The attempt for {player} to bid {bid_points} points on item {bid_item} was unsuccessful\n {message_out}")
+            # Print failure to log file
+        print(f"{bid_time} - Bid success: {bid_success} \n Message out: {message_out}", file=open(log_filename, 'a'))
 
 
 # run the cog within the bot

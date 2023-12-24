@@ -35,12 +35,10 @@ async def on_ready():
         print(f"Bot connection commenced - test bot {ver}")
         print("------------------------------")
 
-
-
     # Testing bot capability to print out to server channel
     channel = bot.get_channel(bids_channel_id)
     print(channel)
-    #await channel.send("Bot starting up! Please place your bids")
+    await channel.send("Bot starting up! Please place your bids")
 
 
 # Slash Command: Ping
@@ -59,7 +57,6 @@ async def on_disconnect():
         print("------------------------------")
 
 
-
 # Bot close function - prints out to terminal to aid debugging if debug_mode is true
 # Report close to log file
 @bot.event
@@ -70,26 +67,11 @@ async def on_close():
         print("------------------------------")
 
 
-
-# Now testing the addition of the discord bot interface
-# Test job for schedule-driver output
-# This job will print to the new-test-channel
-def print_job():
-    print("test job print - alternate")
-    channel = bot.get_channel(meltdown_bids_test_channel_id)
-    date_time = datetime.now()
-    print(channel)
-    channel.send(f"Sending alternate message @ {date_time}")
-
-    channel.send("alternate test")
-
-
 # Simple test command - remove prior to pushing production version
 @bot.slash_command(guild_ids=[server_id], name="test", description="Slash commands test")
 async def test(interaction: Interaction):
     player = interaction.user.display_name  # Get player name from discord user displayname
     await interaction.response.send_message(f"Hello, this is a test output initiatied by {player}")
-    #print_job()
 
 
 # Load relevant cogs to support bot
