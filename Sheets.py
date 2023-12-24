@@ -19,12 +19,12 @@ points_index = 4
 # Use get_worksheet method to open the worksheet by index
 bids = gspread.authorize(credentials).open_by_key(spreadsheet_id).get_worksheet(bids_index)
 roster = gspread.authorize(credentials).open_by_key(spreadsheet_id).get_worksheet(roster_index)
-points = gspread.authorize(credentials).open_by_key(spreadsheet_id).get_worksheet(points_index)
+points_sheet = gspread.authorize(credentials).open_by_key(spreadsheet_id).get_worksheet(points_index)
 
 # These return embedded lists containing all the rows, and their entries
 bids_values = bids.get_all_values()
 roster_values = roster.get_all_values()
-points_values = points.get_all_values()
+points_values = points_sheet.get_all_values()
 
 
 # Function to get font text color from a specific cell (row/col definition) on a specific worksheet
@@ -119,7 +119,13 @@ def check_bid(player, item, points_in):
         if item_present:
             # If player and item exist, check that bid is valid
             # (i.e. a whole integer >= 1 and the player has sufficient points), otherwise failed bid
-            valid_points = points.isnumeric()
+            if isinstance(points_in, int) and points_in >= 1:
+                valid_points = True
+            else:
+                if debug_mode:
+                    print("Points bid must be integers - FAILED")
+                valid_points = False
+
             has_points = check_points(player, points_in)
             if valid_points and has_points:
                 if debug_mode:

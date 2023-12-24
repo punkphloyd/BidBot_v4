@@ -103,18 +103,19 @@ class Bids(commands.Cog):
         player = player.title()
         bid_item = item.title()
         bid_points = int(points)
+        print(bid_points)
         bid_level = int(level)
 
         # Check player and item exist (achieved with check_bid and dummy 0 points)
         # Points check must occur at point of application (otherwise would be possible for players to submit multiple bids
         # that (individually) they have points for, but cumulatively they do not
-        bid_success, message_out = check_bid(player, bid_item, 0)
+        bid_success, message_out = check_bid(player, bid_item, bid_points)
         if bid_success:
             await interaction.response.send_message(f"{player} has successfully placed a pending bid of {points} points on {item} - Note the points check will occur at the time of application")
             bid = [bid_time_month, bid_time_date, bid_time_hm, player, bid_item, bid_points, bid_level]
             if debug_mode:
                 print(f"Bid to be written: {bid}")
-            bid_write(bid)
+            # bid_write(bid)
 
         else:
             await interaction.response.send_message(f"The attempt for {player} to bid {points} points on item {item} was unsuccessful\n {message_out}")
@@ -139,6 +140,29 @@ class Bids(commands.Cog):
                 print(f"{interaction.user.display_name} does not have the role {role} - may not use the /bid function")
             return
 
+        bid_points = int(points)
+        bid_level = int(level)
+
+        bid_time = datetime.now()
+        bid_time_hm = bid_time.strftime("%H:%M")
+        bid_time_date = bid_time.strftime("%d")
+        bid_time_month = bid_time.strftime("%m")
+
+        date_now = datetime.now()
+        date_in = date_now.strftime("%Y%m%d")
+        bid_time = datetime.now()  # Get time of bid
+        bid_time_min = bid_time.minute
+        # Correction to prevent 3-digit timestamps
+        if bid_time_min < 10:
+            zero = "0"
+        else:
+            zero = ""
+
+        date_now = datetime.now()
+        date_in = date_now.strftime("%Y%m%d")
+        # Prefix to log file
+        log_filename_pre = "./logs/bid_bot.log_"
+        log_filename = log_filename_pre + date_in
         if debug_mode:
             print("Bid2 Function Debugging")
 
@@ -148,6 +172,56 @@ class Bids(commands.Cog):
         await interaction.response.send_message("Select the end game content for your item bid", view=view)
         await view.wait()
 
+        player = interaction.user.display_name  # Get player name from discord user displayname
+        if debug_mode:
+            print(f"{bid_time.hour}{zero}{bid_time.minute} User running /bid2 is {player}")
+
+        if view.value is None:
+            if debug_mode:
+                print("View value of none has been reached - this should not be encountered; please examine logs")
+            print(f"{player} has attempted a bid at {datetime} which has produced a view.value == None result", file=open(log_filename, 'a'))
+
+        # Each option produces multiple sub-options; the majority of the code below is arranging the button interface for users to access
+        # User selects sky option in first button options
+        elif view.value == 'Sky':
+            if debug_mode:
+                print("Sky has been selected")
+            view2 = SkyButtons()
+            await interaction.followup.send("Which sky boss would you like?", view=view2)
+            await view2.wait()
+
+            # User offered then choice of gods for bids
+            if view2.god == 'Kirin':
+                if debug_mode:
+                    print("Kirin has been selected")
+                view3 = KirinButtons()
+                await interaction.followup.send("Which Kirin drops would you like to bid on?", view=view3)
+                await view3.wait()
+            elif view2.god == 'Genbu':
+                if debug_mode:
+                    print("Genbu has been selected")
+                view3 = GenbuButtons()
+                await interaction.followup.send("Which Genbu drops would you like to bid on?", view=view3)
+                await view3.wait()
+            elif view2.god == 'Byakko':
+                if debug_mode:
+                    print("Byakko has been selected")
+                view3 = ByakkoButtons()
+                await interaction.followup.send("Which Byakko drops would you like to bid on?", view=view3)
+                await view3.wait()
+            elif view2.god == 'Suzaku':
+                if debug_mode:
+                    print("Suzaku has been selected")
+                view3 = SuzakuButtons()
+                await interaction.followup.send("Which Suzaku drops would you like to bid on?", view=view3)
+                await view3.wait()
+            elif view2.god == 'Seiryu':
+                if debug_mode:
+                    print("Seiryu has been selected")
+                view3 = SeiryuButtons()
+                await interaction.followup.send("Which Seiryu drops would you like to bid on?", view=view3)
+                await view3.wait()
+        ###########################
 
 
 
