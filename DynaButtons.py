@@ -58,7 +58,7 @@ class RelicButtons(nextcord.ui.View):
         self.drop = 'Body -1'
         self.stop()
 
-    @nextcord.ui.button(label="Relic Hands", style=nextcord.ButtonStyle.red)
+    @nextcord.ui.button(label="Relic Hands -1", style=nextcord.ButtonStyle.red)
     async def hands_mone(self, button: nextcord.ui.Button, interaction: Interaction):
         await interaction.response.send_message("Relic Hands -1", ephemeral=ephemeral)
         self.drop = 'Hands -1'
