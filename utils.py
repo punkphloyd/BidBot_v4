@@ -1,6 +1,6 @@
 import os
 debug_mode = True   # Debug mode controls numerous print to terminal messages to assist with development and debugging of bot
-
+ephemeral = False
 
 # Standard font_colour dictionary for differet text colours (only red colour to be used in the bot)
 red_colour = {'red': 1, 'blue': 0, 'green': 0}

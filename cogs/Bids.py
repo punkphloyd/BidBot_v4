@@ -11,7 +11,7 @@ from HENMButtons import *
 from datetime import date, time, datetime
 import time
 from Sheets import *
-from utils import debug_mode
+from utils import debug_mode, ephemeral
 
 
 # BidButtons class - this defines the top level set of buttons with which users will be presented upon the /bid2 function
@@ -24,37 +24,37 @@ class BidButtons(nextcord.ui.View):
 
     @nextcord.ui.button(label="Sky", style=nextcord.ButtonStyle.red)
     async def sky_bids(self, button: nextcord.ui.Button, interaction: Interaction):
-        await interaction.response.send_message("Sky bids", ephemeral=True)
+        await interaction.response.send_message("Sky bids", ephemeral=ephemeral)
         self.value = "Sky"
         self.stop()
 
     @nextcord.ui.button(label="Sea", style=nextcord.ButtonStyle.grey)
     async def sea_bids(self, button: nextcord.ui.Button, interaction: Interaction):
-        await interaction.response.send_message("Sea bids", ephemeral=True)
+        await interaction.response.send_message("Sea bids", ephemeral=ephemeral)
         self.value = "Sea"
         self.stop()
 
     @nextcord.ui.button(label="Dynamis", style=nextcord.ButtonStyle.blurple)
     async def dyna_bids(self, button: nextcord.ui.Button, interaction: Interaction):
-        await interaction.response.send_message("Dynamis bids", ephemeral=True)
+        await interaction.response.send_message("Dynamis bids", ephemeral=ephemeral)
         self.value = "Dynamis"
         self.stop()
 
     @nextcord.ui.button(label="Limbus", style=nextcord.ButtonStyle.green)
     async def limbus_bids(self, button: nextcord.ui.Button, interaction: Interaction):
-        await interaction.response.send_message("Limbus bids", ephemeral=True)
+        await interaction.response.send_message("Limbus bids", ephemeral=ephemeral)
         self.value = "Limbus"
         self.stop()
 
     @nextcord.ui.button(label="HNM", style=nextcord.ButtonStyle.red)
     async def hnm_bids(self, button: nextcord.ui.Button, interaction: Interaction):
-        await interaction.response.send_message("HNM bids", ephemeral=True)
+        await interaction.response.send_message("HNM bids", ephemeral=ephemeral)
         self.value = "HNM"
         self.stop()
 
     @nextcord.ui.button(label="HENM", style=nextcord.ButtonStyle.blurple)
     async def henm_bids(self, button: nextcord.ui.Button, interaction: Interaction):
-        await interaction.response.send_message("HENM bids", ephemeral=True)
+        await interaction.response.send_message("HENM bids", ephemeral=ephemeral)
         self.value = "HENM"
         self.stop()
 
