@@ -49,31 +49,31 @@ class RelicButtons(nextcord.ui.View):
     @nextcord.ui.button(label="Relic Head -1", style=nextcord.ButtonStyle.red)
     async def head_mone(self, button: nextcord.ui.Button, interaction: Interaction):
         await interaction.response.send_message("Relic Head -1", ephemeral=ephemeral)
-        self.drop = 'Head -1'
+        self.drop = '-1 Head'
         self.stop()
 
     @nextcord.ui.button(label="Relic Body -1", style=nextcord.ButtonStyle.red)
     async def body_mone(self, button: nextcord.ui.Button, interaction: Interaction):
         await interaction.response.send_message("Relic Body -1", ephemeral=ephemeral)
-        self.drop = 'Body -1'
+        self.drop = '-1 Body'
         self.stop()
 
     @nextcord.ui.button(label="Relic Hands -1", style=nextcord.ButtonStyle.red)
     async def hands_mone(self, button: nextcord.ui.Button, interaction: Interaction):
         await interaction.response.send_message("Relic Hands -1", ephemeral=ephemeral)
-        self.drop = 'Hands -1'
+        self.drop = '-1 Hands'
         self.stop()
 
     @nextcord.ui.button(label="Relic Legs -1", style=nextcord.ButtonStyle.red)
     async def legs_mone(self, button: nextcord.ui.Button, interaction: Interaction):
         await interaction.response.send_message("Relic Legs -1", ephemeral=ephemeral)
-        self.drop = 'Legs -1'
+        self.drop = '-1 Legs'
         self.stop()
 
     @nextcord.ui.button(label="Relic Feet -1", style=nextcord.ButtonStyle.red)
     async def feet_mone(self, button: nextcord.ui.Button, interaction: Interaction):
         await interaction.response.send_message("Relic Feet -1", ephemeral=ephemeral)
-        self.drop = 'Feet -1'
+        self.drop = '-1 Feet'
         self.stop()
 
 

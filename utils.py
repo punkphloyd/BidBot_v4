@@ -8,7 +8,7 @@ blue_colour = {'red': 0, 'blue': 1, 'green': 0}
 green_colour = {'red': 0, 'blue': 0, 'green': 1}
 
 
-# Function which converts an excel column letter to the corresponding number
+# Function which converts an Excel column letter to the corresponding number
 # E.g. A->1, B->2, Z->26, AA->27, AB->28 etc.
 def letter_to_number(column_letter):
     result = 0

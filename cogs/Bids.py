@@ -169,7 +169,7 @@ class Bids(commands.Cog):
         view = BidButtons()  # Output for Sky/Sea etc. choice
         view2 = None  # To be re-assigned later, pending initial EG Area choice
         view3 = None  # To be re-assigned later, pending initial EG Area choice
-        await interaction.response.send_message("Select the end game content for your item bid", view=view)
+        await interaction.response.send_message("Select the end game content for your item bid", view=view, ephemeral=ephemeral)
         await view.wait()
 
         player = interaction.user.display_name  # Get player name from discord user displayname
@@ -367,7 +367,7 @@ class Bids(commands.Cog):
             bid = [bid_time_month, bid_time_date, bid_time_hm, player, bid_item, bid_points, bid_level]
             if debug_mode:
                 print(f"Bid to be written: {bid}")
-            bid_write(bid)
+            # bid_write(bid)
 
         else:
             await interaction.response.send_message(f"The attempt for {player} to bid {bid_points} points on item {bid_item} was unsuccessful\n {message_out}")

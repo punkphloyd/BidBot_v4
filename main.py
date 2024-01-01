@@ -1,4 +1,5 @@
 from Sheets import *
+from utils import *
 from api_keys import *
 import random
 import time
@@ -31,14 +32,39 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
 
+    # Date format to add to log file name (YYYYMMDD)
+    date_now = datetime.now()
+    date = date_now.strftime("%Y%m%d")
+    time_hhmmss = date_now.strftime("%H:%M:%S")
+
     if debug_mode:
         print(f"Bot connection commenced - test bot {ver}")
         print("------------------------------")
+        # Check if logs directory exists, and create if it does not
+    logs_dir_exists = os.path.exists(logs_dir)
+    if not logs_dir_exists:
+        os.makedirs(logs_dir)
 
+    # Log file name = pre + date
+    log_filename = log_filename_pre + date
+    # Should produce a log file unique to each day - will need to factor in some sort of cleanup routine on the system (probably via cron)
+    # So that only 1 week of log files are retained
+
+    # Check if log file already exists, if so open as append; otherwise open to write
+    if os.path.exists(log_filename):
+        log_file = open(log_filename, 'a')
+    else:
+        log_file = open(log_filename, 'w')
+
+    # Print opening line to log file
+    print(f"Bot starting at {time_hhmmss}", file=log_file)
     # Testing bot capability to print out to server channel
     channel = bot.get_channel(bids_channel_id)
     print(channel)
-    await channel.send("Bot starting up! Please place your bids")
+    if debug_mode:
+        await channel.send(f"Bot starting up in debug mode. {time_hhmmss} - {date} ; log: {log_filename}")
+    else:
+        await channel.send("Bot starting up! Please place your bids")
 
 
 # Slash Command: Ping
