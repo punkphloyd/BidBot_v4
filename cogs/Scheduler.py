@@ -83,7 +83,7 @@ class Scheduler(commands.Cog):
         if debug_mode:
             print(f"Bid close time is : {bid_ct}")
         await channel.send(f"Bid close time for today was {bid_ct}")
-        date_tmrw = date + timedelta(days=1)
+        date_tmrw = datetime.now() + timedelta(days=1)
         print(f"Generating bid close time for {date_tmrw}", file=open(log_filename, 'a'))
         bc_file = open(bid_close_file, 'w')
 
@@ -122,10 +122,10 @@ class Scheduler(commands.Cog):
                 print(line)
             bid = line
             # Check if bid contains correct number of line items
-            if len(bid) != 6:
+            if len(bid) != 7:
                 if debug_mode:
-                    print(f"Bid: {bid} should be 6 items in length. It is {len(bid)}")
-                print(f"Bid: {bid} should be 6 items in length. It is {len(bid)}", file=open(log_filename, 'a'))
+                    print(f"Bid: {bid} should be 7 items in length. It is {len(bid)}")
+                print(f"Bid: {bid} should be 7 items in length. It is {len(bid)}", file=open(log_filename, 'a'))
                 continue
 
             player = bid[3]

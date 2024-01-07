@@ -28,9 +28,10 @@ def number_to_letter(column_number):
     return result
 
 
-data_dir = "./data/"
+base_dir = "C:\\Users\\jarya\\PycharmProjects\\BidBot_v4"
+data_dir = base_dir + "./data/"
 bid_close_filename = data_dir + "bid_close.tme"
-logs_dir = "./logs/"
+logs_dir = base_dir + "./logs/"
 log_filename_pre = logs_dir + "bid_bot.log_"
 bids_filename = data_dir + "bids.dat"
 

@@ -78,19 +78,60 @@ async def ping(ctx):
 @bot.event
 async def on_disconnect():
 
+    # Date format to add to log file name (YYYYMMDD)
+    date_now = datetime.now()
+    date = date_now.strftime("%Y%m%d")
+    time_hhmmss = date_now.strftime("%H:%M:%S")
+
     if debug_mode:
         print(f"Bot connection failure - test bot {ver}")
         print("------------------------------")
+    logs_dir_exists = os.path.exists(logs_dir)
+    if not logs_dir_exists:
+        os.makedirs(logs_dir)
 
+    # Log file name = pre + date
+    log_filename = log_filename_pre + date
+    # Should produce a log file unique to each day - will need to factor in some sort of cleanup routine on the system (probably via cron)
+    # So that only 1 week of log files are retained
+
+    # Check if log file already exists, if so open as append; otherwise open to write
+    if os.path.exists(log_filename):
+        log_file = open(log_filename, 'a')
+    else:
+        log_file = open(log_filename, 'w')
+
+    # Print opening line to log file
+    print(f"Bot disconnect at {time_hhmmss}", file=log_file)
 
 # Bot close function - prints out to terminal to aid debugging if debug_mode is true
 # Report close to log file
 @bot.event
 async def on_close():
-    #
+    # Date format to add to log file name (YYYYMMDD)
+    date_now = datetime.now()
+    date = date_now.strftime("%Y%m%d")
+    time_hhmmss = date_now.strftime("%H:%M:%S")
     if debug_mode:
         print(f"Bot closed - test bot {ver}")
         print("------------------------------")
+    logs_dir_exists = os.path.exists(logs_dir)
+    if not logs_dir_exists:
+        os.makedirs(logs_dir)
+
+    # Log file name = pre + date
+    log_filename = log_filename_pre + date
+    # Should produce a log file unique to each day - will need to factor in some sort of cleanup routine on the system (probably via cron)
+    # So that only 1 week of log files are retained
+
+    # Check if log file already exists, if so open as append; otherwise open to write
+    if os.path.exists(log_filename):
+        log_file = open(log_filename, 'a')
+    else:
+        log_file = open(log_filename, 'w')
+
+    # Print opening line to log file
+    print(f"Bot closed at {time_hhmmss}", file=log_file)
 
 
 # Simple test command - remove prior to pushing production version

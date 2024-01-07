@@ -11,7 +11,8 @@ from HENMButtons import *
 from datetime import date, time, datetime
 import time
 from Sheets import *
-from utils import debug_mode, ephemeral
+from utils import debug_mode, ephemeral, bids_filename, bid_close_filename, log_filename_pre, data_dir
+import os
 
 
 # BidButtons class - this defines the top level set of buttons with which users will be presented upon the /bid2 function
@@ -68,6 +69,245 @@ class Bids(commands.Cog):
     @nextcord.slash_command(name="bid_test", description="Test of bid function", guild_ids=[server_id])
     async def test_bid(self, interaction: Interaction):
         await interaction.response.send_message("bid_test - function scratch")
+
+    # Function to allow admins to manually push bids from bids.dat to sheet
+    # Used for debugging and development; debug_mode only
+    @nextcord.slash_command(name="push_bids", description="Prints out contents of pending bids datafile", guild_ids=[server_id])
+    async def push_bids(self, interaction: Interaction):
+        if not debug_mode:
+            await interaction.send("Debug_mode must be on for this function to be used")
+            return
+
+        # Function only accessible to admins
+        role = nextcord.utils.get(interaction.guild.roles, name="Admin")
+        if role in interaction.user.roles:
+            if debug_mode:
+                print(f"{interaction.user.display_name} has the role {role} - may successfully use the /print_bids function")
+        else:
+            await interaction.send("You must be an admin to use this command")
+            if debug_mode:
+                print(f"{interaction.user.display_name} does not have the role {role} - may not use the /push_bids function")
+            return
+
+        # Initiate manual bid pushing (same function as used in scheduler)
+        # Generate appropriate log filename first
+        date_push = datetime.now().strftime("%Y%m%d")
+        time_push = datetime.now().strftime("%H:%M:%S")
+
+        log_filename = log_filename_pre + date
+
+        if debug_mode:
+            print(f"It is {time_push}, the program will now examine the day's bids and push valid bids to sheet")
+            await interaction.send(f"{time_push}: Bid push function activated - forces pushing of pending bids (in bids.dat) onto google sheets. Used for debugging and development only as this bypasses the scheduling/deadline elements.")
+
+        # Check if bids.dat exists, it not then abort
+        bids_exists = os.path.exists(bids_filename)
+        if not bids_exists:
+            if debug_mode:
+                print(f"Bids file {bids_filename} did not exist, aborting function")
+            await interaction.send(f"The bids file ({bids_filename}) does not exist. Aborting function.")
+            return
+        # Check if bids file is empty
+        if os.path.getsize(bids_filename) == 0:
+            await interaction.send("Bids file is currently empty")
+            return
+
+        # Presently unused code, will be required for implementation of push_bids to test delayed bids application
+        # Once delayed push_bid functionality testing required, remove the commenting from the return lines in the elif/else segments
+        # Check bid deadline file exists, otherwise return an error
+        try:
+            with open(bid_close_filename, 'r') as file:
+                content = file.read()
+                if not content:
+                    print(f"Bid close timestamp file {bid_close_filename} does not exist")
+                    await interaction.send(f"Bids close time file {bid_close_filename} cannot be found, or is empty.")
+                    bid_ct = "19:00"  # Placeholder for debugging
+                    # return
+
+                numlines = len(file.readlines())
+                if numlines != 1:
+                    print(f"Too many lines in bid close file: {numlines} lines in {bid_close_filename}")
+                    await interaction.send(f"Too many lines in bid close file: {numlines} lines in {bid_close_filename}")
+                    bid_ct = "19:00"
+                else:
+                    bid_ct = file.read()
+                    print(bid_ct)
+        except FileNotFoundError:
+            print(f"Bid close timestamp file {bid_close_filename} does not exist")
+            await interaction.send(f"Bids close time file {bid_close_filename} cannot be found, or is empty.")
+            bid_ct = "19:00"
+            # return
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            bid_ct = "19:00"
+        await interaction.send(f"Bid close time for {date_push} : {bid_ct}")
+
+        # If bids file exists and is not empty, open the file and loop through the contents line by line
+        with open(bids_filename, "r") as bdf:
+            line_no = 1
+            for line in bdf:
+                print(line)
+                await interaction.send(f"Line no: {line_no} : {line}")
+                bid_tmp = line
+
+            # Check bid contains correct number of entries (7 items)
+                if len(bid_tmp) != 7:
+                    print(f"Bid: {bid_tmp} should be 7 items in length. It is {len(bid_tmp)}")
+                    await interaction.send(f"Bid: {bid_tmp} should be 7 items in length. It is {len(bid_tmp)} - skipping bid.")
+                    continue
+                # Read bid entries
+                player_tmp = bid_tmp[3]
+                item_tmp = bid_tmp[4]
+                points_tmp = int(bid_tmp[5])
+                level_tmp = int(bid_tmp[6])
+
+                # Check if level of bid submission is 65+ or not
+                if level_tmp >= 65:
+                    over65_tmp = True
+                else:
+                    over65_tmp = False
+
+                # Including bid date/time and bid close time handling for future testing purposes, present implementation does not require
+                date_tmp = int(bid_tmp[1])
+                month_tmp = int(bid_tmp[0])
+                bid_time_tmp = bid_tmp[2]
+                bid_time_hour_tmp = int(bid_tmp[2][:2])
+                bid_time_min_tmp = int(bid_tmp[2][-2:])
+
+                # Check if bid was prior to bid window closing
+                # Get date month and time
+                date_now_tmp = datetime.now().strftime("%d")
+                month_now_tmp = datetime.now().month
+                # Get data for bid close time in appropriate format
+                hour_close_tmp = int(bid_ct[:2])
+                min_close_tmp = int(bid_ct[-2:])
+
+                # Check if bid was input prior to window closure
+                # If bid was input in previous month, (either new month > old month, or new month == 1), then bid is good
+                if month_tmp < month_now_tmp or (month_now_tmp == 1 and month_tmp == 12):
+                    bid_good = True
+                else:
+                    # If same month, check date
+                    # If date is from at least 1 day prior, bid is good
+                    if date_tmp < int(date_now_tmp):
+                        bid_good = True
+                    else:
+                        # If bid is from same date, check timestamp again bid close timestamp
+                        # If bid close hour is larger than bid application hour, bid is good
+                        # Or if hours are equal, then bid close minute must exceed bid application minute
+                        if bid_time_hour_tmp < hour_close_tmp or (bid_time_hour_tmp == hour_close_tmp and bid_time_min_tmp < min_close_tmp):
+                            bid_good = True
+                        else:
+                            # If all previous tests have failed, bid has not been submitted prior to passage of
+                            # at least one bid close window
+                            # Therefore bid is not yet good and must remain on the stack
+                            #bid_good = False
+                            # Temporarily force bid_good as true
+                            bid_good = True
+
+                # Handle good / bad bids appropriately
+                if not bid_good:
+                    if debug_mode:
+                        print(f"Bid not yet implemented, bid time: {bid_time_tmp}, bid window closed: {bid_ct} (Player: {player_tmp}, Item: {item_tmp}, Points: {points_tmp} ")
+                        await interaction.send(f"Bid not yet implemented, bid time: {bid_time_tmp}, bid window closed: {bid_ct} (Player: {player_tmp}, Item: {item_tmp}, Points: {points_tmp} ")
+                        return
+                else:
+                    # Check if bid is good using player, item, and points values
+                    bid_success, message_out = check_bid(player_tmp, item_tmp, points_tmp)
+                    if bid_success:
+                        await interaction.send(f"Successful bid: {player_tmp} has bid {points_tmp} points on {item_tmp} as a pending bid")
+                        # Print success to log file
+                        print(f"{date} - Bid success: {bid_success} \n Message out: {message_out}", file=open(log_filename, 'a'))
+
+                        # Code logic to apply and push new bid to sheet
+                        # Copy logic from previous (non time-delay) routine for writing to sheets
+                        # Get all existing bids on the corresponding item, and check if player already has an existing bid in place
+                        # E.g., Fortitude Torque : Hammer bids 10, Shamrock	bids 7, and	Tasco bids 1
+                        # This produces a dictionary which looks like:
+                        # { 'Hammer': 10, 'Shamrock': 7, 'Tasco': 1 }
+                        all_bids = get_all_bids(item_tmp)
+                        if debug_mode:
+                            print("Original bids: ")
+                            print(all_bids)
+                        ######
+                        pre_bid = get_player_bid(player_tmp, item_tmp)
+
+                        if pre_bid != 0:  # i.e., player has points already in this item
+                            new_points = int(points_tmp) + int(pre_bid)
+                            all_bids[player_tmp] = new_points
+                            if debug_mode:
+                                print("Existing bids updated")
+                                print(all_bids)
+                        else:  # pre_points == 0 -> i.e. fresh bid on this item for this player
+                            # Fresh bid - add new bid to this dictionary
+                            all_bids[player_tmp] = points_tmp
+                            if debug_mode:
+                                print("New bid added:")
+                                print(all_bids)
+
+                        # bid_conv function to convert all points values to integers (code reads as strings otherwise)
+                        # all_bids = bid_conv(all_bids)
+                        # Sort all bids by points
+                        # all_bids = bid_sort(all_bids)
+
+                        if debug_mode:
+                            # Printing out in debug mode to ensure that column and row being obtained is the one expected
+                            print("column/row for bid_item: ")
+                            col, row = find_cell(item_tmp)
+                            print(f"{col}{row}")
+
+                            print("column/row for player: ")
+                            colp, rowp = find_cell(player_tmp)
+                            print(f"{colp}{rowp}")
+
+                        if debug_mode:
+                            print(f"Implementing new bids onto {item_tmp}")
+                        if debug_mode:
+                            print("Sorted bids: ")
+                            print(all_bids)
+                        print(f"{date_tmp}/{month_tmp} {bid_time_tmp} - Adding bids: {all_bids} onto {item_tmp}", file=open(log_filename, 'a'))
+                        update_bids(item_tmp, all_bids)
+                        # Otherwise, report to the player that the bid has failed and identify the diagnosed cause
+                    else:
+                        await interaction.send(f"The attempt for {player_tmp} to bid {points_tmp} points on item {item_tmp} was unsuccessful\n {message_out}")
+                        # Print failure to log file
+                        print(f"{bid_time_tmp} - Bid success: {bid_success} \n Message out: {message_out}", file=open(log_filename, 'a'))
+
+    # Function to enable admins to print pending bids - used for debugging
+    @nextcord.slash_command(name="print_bids", description="Prints out contents of pending bids datafile", guild_ids=[server_id])
+    async def print_bids(self, interaction: Interaction):
+        # Function only accessible to admins
+        role = nextcord.utils.get(interaction.guild.roles, name="Admin")
+        if role in interaction.user.roles:
+            if debug_mode:
+                print(f"{interaction.user.display_name} has the role {role} - may successfully use the /print_bids function")
+        else:
+            await interaction.send("You must be an admin to use this command")
+            if debug_mode:
+                print(f"{interaction.user.display_name} does not have the role {role} - may not use the /print_bids function")
+            return
+
+        # Check that the bids file exists
+        if os.path.exists(bids_filename):
+
+            # Check if bids file is empty
+            if os.path.getsize(bids_filename) == 0:
+                await interaction.send("Bids file is currently empty")
+            else:
+                # Open bids file
+                with open(bids_filename, "r") as file:
+                    line_no = 1
+                    # Iterate line-by-line and print out to console and discord
+                    for line in file:
+                        line = line.strip()
+                        print(line)
+                        await interaction.send(f"Line {line_no}: {line}")
+                        line_no = line_no + 1
+        else:
+            await interaction.send(f"Bids file ({bids_filename}) could not be located, please see logfile for debugging information")
+            print(f"Bids file {bids_filename} could not be located for print_bids function")
+
+
     #########################################  BID FUNCTION #########################################
 
     # Function to add user bids (manual input)
