@@ -234,13 +234,19 @@ class Bids(commands.Cog):
 
                         if pre_bid != 0:  # i.e., player has points already in this item
                             new_points = int(points_tmp) + int(pre_bid)
-                            all_bids[player_tmp] = new_points
+                            if over65_tmp:
+                                all_bids[player_tmp] = [new_points, 0]
+                            if not over65_tmp:
+                                all_bids[player_tmp] = [new_points, 1]
                             if debug_mode:
                                 print("Existing bids updated")
                                 print(all_bids)
                         else:  # pre_points == 0 -> i.e. fresh bid on this item for this player
                             # Fresh bid - add new bid to this dictionary
-                            all_bids[player_tmp] = points_tmp
+                            if over65_tmp:
+                                all_bids[player_tmp] = [points_tmp, 0]
+                            if not over65_tmp:
+                                all_bids[player_tmp] = [points_tmp, 1]
                             if debug_mode:
                                 print("New bid added:")
                                 print(all_bids)

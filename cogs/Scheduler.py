@@ -191,9 +191,9 @@ class Scheduler(commands.Cog):
 
                     # Copy logic from previous (non time-delay) routine for writing to sheets
                     # Get all existing bids on the corresponding item, and check if player already has an existing bid in place
-                    # E.g., Fortitude Torque : Hammer bids 10, Shamrock	bids 7, and	Tasco bids 1
+                    # E.g., Placeholder item: Hammer bids 10, Shamrock	bids 7, and	Tasco bids 1 - shamrock is under65
                     # This produces a dictionary which looks like:
-                    # { 'Hammer': 10, 'Shamrock': 7, 'Tasco': 1 }
+                    # { 'Hammer': [10, 0], 'Shamrock': [7, 1], 'Tasco': [1, 0] }
                     all_bids = get_all_bids(item)
                     if debug_mode:
                         print("Original bids: ")
@@ -203,13 +203,19 @@ class Scheduler(commands.Cog):
 
                     if pre_bid != 0:  # i.e., player has points already in this item
                         new_points = int(points) + int(pre_bid)
-                        all_bids[player] = new_points
+                        if over65:
+                            all_bids[player] = [new_points, 0]
+                        if not over65:
+                            all_bids[player] = [new_points, 1]
                         if debug_mode:
                             print("Existing bids updated")
                             print(all_bids)
                     else:  # pre_points == 0 -> i.e. fresh bid on this item for this player
                         # Fresh bid - add new bid to this dictionary
-                        all_bids[player] = points
+                        if over65:
+                            all_bids[player] = [points, 0]
+                        if not over65:
+                            all_bids[player] = [points, 1]
                         if debug_mode:
                             print("New bid added:")
                             print(all_bids)

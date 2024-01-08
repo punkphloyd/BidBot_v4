@@ -28,7 +28,7 @@ points_values = points_sheet.get_all_values()
 
 
 # Function to get font text color from a specific cell (row/col definition) on a specific worksheet
-# Returns an RGB dictionary - logic within main functions to utilise this (if/else ['red'] exists, for example)
+# Returns 1 if text is non-default (i.e. black), and 0 if no text colour formatting present
 def get_font_color(row, col, worksheet):
 
     cell = worksheet.cell(row, col)
