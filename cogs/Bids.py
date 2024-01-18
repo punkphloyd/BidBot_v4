@@ -8,10 +8,11 @@ from AreaButtons import *
 from SeaGodButtons import *
 from DynaButtons import *
 from HENMButtons import *
+from BattlefieldButtons import *
 from datetime import date, time, datetime
 import time
 from Sheets import *
-from utils import debug_mode, ephemeral, bids_filename, bid_close_filename, log_filename_pre, data_dir
+from utils import debug_mode, ephemeral, bids_filename, bid_close_filename, log_filename_pre, data_dir, bid_write
 import os
 
 
@@ -57,6 +58,12 @@ class BidButtons(nextcord.ui.View):
     async def henm_bids(self, button: nextcord.ui.Button, interaction: Interaction):
         await interaction.response.send_message("HENM bids", ephemeral=ephemeral)
         self.value = "HENM"
+        self.stop()
+
+    @nextcord.ui.button(label="Battlefields", style=nextcord.ButtonStyle.blurple)
+    async def henm_bids(self, button: nextcord.ui.Button, interaction: Interaction):
+        await interaction.response.send_message("Battlefields bids", ephemeral=ephemeral)
+        self.value = "Battlefields"
         self.stop()
 
 
@@ -419,6 +426,7 @@ class Bids(commands.Cog):
         await view.wait()
 
         player = interaction.user.display_name  # Get player name from discord user displayname
+        player = player.title()
         if debug_mode:
             print(f"{bid_time.hour}{zero}{bid_time.minute} User running /bid2 is {player}")
 
@@ -467,6 +475,7 @@ class Bids(commands.Cog):
                 view3 = SeiryuButtons()
                 await interaction.followup.send("Which Seiryu drops would you like to bid on?", view=view3)
                 await view3.wait()
+            bid_item = view3.drop
         ###########################
         # User selects HENM option in first button options
         elif view.value == 'HENM':
@@ -488,6 +497,7 @@ class Bids(commands.Cog):
                 await interaction.followup.send("Which Despotic Decapods drops would you like to bid on?", view=view3)
                 await view3.wait()
 
+            bid_item = view3.drop
         ###########################
         # User selects sea option in first button options
         elif view.value == 'Sea':
@@ -558,6 +568,8 @@ class Bids(commands.Cog):
                 view3 = IxaernButtons()
                 await interaction.followup.send("Which Ix'Aern drops would you like to bid on?", view=view3)
                 await view3.wait()
+
+            bid_item = view3.drop
         ###########################
 
         # User selects dynamis option in first button options
@@ -574,7 +586,7 @@ class Bids(commands.Cog):
             await view2.wait()
 
             # Not Dyna-Lord / Dyna-Tav == Relic pieces
-            if not view2.god == 'Dynamis-Lord' and not view2.god == 'Dyna-Tav':
+            if not view2.god == 'Dynamis-Lord' and not view2.god == 'Dynamis-Tav':
                 if debug_mode:
                     print("Job relic has been selected")
                 view3 = RelicButtons()
@@ -589,14 +601,39 @@ class Bids(commands.Cog):
             else:  # Else, only other option is Dyna-Tav - bring up dyna tav
                 view3 = DynaTButtons()
 
-        # For relic, bid item is concatenation of job and piece (e.g. MNK Legs / RDM Head -1)
-        if view.value == 'Dynamis' and not view2.god == 'Dynamis-Lord' and not view2.god == 'Dyna-Tav':
-            bid_item = str(view2.god) + " " + str(view3.drop)
+            # For relic, bid item is concatenation of job and piece (e.g. MNK Legs / RDM Head -1)
+            if view.value == 'Dynamis' and not view2.god == 'Dynamis-Lord' and not view2.god == 'Dynamis-Tav':
+                bid_item = str(view2.god) + " " + str(view3.drop)
 
+            else:
+                bid_item = view3.drop  # Has this been coded fully in DynaButtons.py? Need to check
+            if debug_mode:
+                print(bid_item)
+        elif view.value == 'Battlefields':
+            view2 = BattlefieldButtons()
+            await interaction.followup.send("Which battlefield would you like to view?", view=view3)
+            await view2.wait()
+
+            if view2.god == "Waking":
+                view3 = WTBButtons()
+                await interaction.followup.send("Which Waking the Beast piece would you like to bid on?", view=view3)
+                await view3.wait()
+
+            elif view2.god == "Bahamut":
+                view3 = BahamutButtons()
+                await interaction.followup.send("Which Bahamutv2 piece would you like to bid on?", view=view3)
+                await view3.wait()
+
+            elif view2.god == "KS99":
+                view3 = KS99Buttons()
+                await interaction.followup.send("Which KS99 piece would you like to bid on?", view=view3)
+                await view3.wait()
+            else:
+                print('This situation should never be reached')
+                view3.drop = None
         else:
-            bid_item = view3.drop  # Has this been coded fully in DynaButtons.py? Need to check
-        if debug_mode:
-            print(bid_item)
+            print('This situation should never be reached')
+            view3.drop = None
 
         if debug_mode:
             print(f"{player} has bid {bid_points} points on item {view3.drop} at {bid_time}")
@@ -607,16 +644,16 @@ class Bids(commands.Cog):
         # Check player and item exist (achieved with check_bid and dummy 0 points)
         # Points check must occur at point of application (otherwise would be possible for players to submit multiple bids
         # that (individually) they have points for, but cumulatively they do not
-        bid_success, message_out = check_bid(player, bid_item, 0)
+        bid_success, message_out = check_bid(player, bid_item, bid_points)
         if bid_success:
-            await interaction.response.send_message(f"{player} has successfully placed a pending bid of {points} points on {bid_item} - Note the points check will occur at the time of application")
+            await interaction.followup.send(f"{player} has successfully placed a pending bid of {points} points on {bid_item} - Note the points check will occur at the time of application")
             bid = [bid_time_month, bid_time_date, bid_time_hm, player, bid_item, bid_points, bid_level]
             if debug_mode:
                 print(f"Bid to be written: {bid}")
-            # bid_write(bid)
+            bid_write(bid)
 
         else:
-            await interaction.response.send_message(f"The attempt for {player} to bid {bid_points} points on item {bid_item} was unsuccessful\n {message_out}")
+            await interaction.followup.send(f"The attempt for {player} to bid {bid_points} points on item {bid_item} was unsuccessful\n {message_out}")
             # Print failure to log file
         print(f"{bid_time} - Bid success: {bid_success} \n Message out: {message_out}", file=open(log_filename, 'a'))
 

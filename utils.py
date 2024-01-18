@@ -53,9 +53,10 @@ def bid_write(bid):
     # If exists, then append latest bid as a new line
     if os.path.exists(bids_filename):
         for item in bid:
-            print(item + "\t", file=open(bids_filename, 'a'))
+            item = str(item)
+            print(item + "\t", file=open(bids_filename, 'a'), end='')
     else:
         print("# Month\tDate\tTime\tPlayer\tItem\tPoints\tPlayerLevel", file=open(bids_filename, 'w'))
         for item in bid:
-            print(item + "\t", file=open(bids_filename, 'a'))
+            print(item + "\t", file=open(bids_filename, 'a'), end='')
     return True

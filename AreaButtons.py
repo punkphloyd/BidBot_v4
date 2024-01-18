@@ -260,6 +260,30 @@ class HNMSButtons(nextcord.ui.View):
         self.stop()
 
 
+class BattlefieldButtons(nextcord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.god = None
+
+    @nextcord.ui.button(label="Waking the Beast", style=nextcord.ButtonStyle.grey)
+    async def wtb_bids(self, button: nextcord.ui.Button, interaction: Interaction):
+        await interaction.response.send_message("Waking the Beast", ephemeral=ephemeral)
+        self.god = 'Waking'
+        self.stop()
+
+    @nextcord.ui.button(label="Bahamut v2", style=nextcord.ButtonStyle.grey)
+    async def bahv2_bids(self, button: nextcord.ui.Button, interaction: Interaction):
+        await interaction.response.send_message("Bahamut v2", ephemeral=ephemeral)
+        self.god = 'Bahamut v2'
+        self.stop()
+
+    @nextcord.ui.button(label="KS99", style=nextcord.ButtonStyle.grey)
+    async def bahv2_bids(self, button: nextcord.ui.Button, interaction: Interaction):
+        await interaction.response.send_message("KS99", ephemeral=ephemeral)
+        self.god = 'KS99'
+        self.stop()
+
+
 class HENMButtons(nextcord.ui.View):
     def __init__(self):
         super().__init__()

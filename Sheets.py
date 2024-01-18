@@ -123,6 +123,8 @@ def check_bid(player, item, points_in):
                 valid_points = True
             else:
                 if debug_mode:
+                    print(points_in)
+                    print(type(points_in))
                     print("Points bid must be integers - FAILED")
                 valid_points = False
 
