@@ -149,6 +149,8 @@ class Bids(commands.Cog):
             bid_ct = "19:00"
         await interaction.send(f"Bid close time for {date_push} : {bid_ct}")
 
+        # End of presently non-functional code-
+
         # If bids file exists and is not empty, open the file and loop through the contents line by line
         with open(bids_filename, "r") as bdf:
             line_no = 1
@@ -217,12 +219,13 @@ class Bids(commands.Cog):
                     if debug_mode:
                         print(f"Bid not yet implemented, bid time: {bid_time_tmp}, bid window closed: {bid_ct} (Player: {player_tmp}, Item: {item_tmp}, Points: {points_tmp} ")
                         await interaction.send(f"Bid not yet implemented, bid time: {bid_time_tmp}, bid window closed: {bid_ct} (Player: {player_tmp}, Item: {item_tmp}, Points: {points_tmp} ")
+                        print(f"{date} - Bid success: {bid_success} \n Message out: {message_out}", file=open(log_filename, 'a'))
                         return
                 else:
                     # Check if bid is good using player, item, and points values
                     bid_success, message_out = check_bid(player_tmp, item_tmp, points_tmp)
                     if bid_success:
-                        await interaction.send(f"Successful bid: {player_tmp} has bid {points_tmp} points on {item_tmp} as a pending bid")
+                        await interaction.send(f"Successful bid: {player_tmp} has bid {points_tmp} points on {item_tmp}")
                         # Print success to log file
                         print(f"{date} - Bid success: {bid_success} \n Message out: {message_out}", file=open(log_filename, 'a'))
 
