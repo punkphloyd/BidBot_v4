@@ -34,6 +34,7 @@ bid_close_filename = data_dir + "bid_close.tme"
 logs_dir = base_dir + "./logs/"
 log_filename_pre = logs_dir + "bid_bot.log_"
 bids_filename = data_dir + "bids.dat"
+bids_temp_filename = data_dir + "bids.tmp"
 
 
 # Function to write bid out to bid datafile (will be called by both bid submission routines)

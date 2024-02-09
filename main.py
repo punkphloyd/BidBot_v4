@@ -27,6 +27,7 @@ intents.message_content = True
 # Bot line - runs the bot
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+
 # Bot start function - prints out to terminal to aid debugging if debug_mode is true
 # Also opens logging file appropriately
 @bot.event

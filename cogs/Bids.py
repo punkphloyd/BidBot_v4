@@ -12,7 +12,7 @@ from BattlefieldButtons import *
 from datetime import date, time, datetime
 import time
 from Sheets import *
-from utils import debug_mode, ephemeral, bids_filename, bid_close_filename, log_filename_pre, data_dir, bid_write
+from utils import debug_mode, ephemeral, bids_filename, bid_close_filename, log_filename_pre, data_dir, bid_write, bids_temp_filename
 import os
 
 
@@ -152,7 +152,7 @@ class Bids(commands.Cog):
         # End of presently non-functional code-
 
         # If bids file exists and is not empty, open the file and loop through the contents line by line
-        with open(bids_filename, "r") as bdf:
+        with open(bids_filename, "r") as bdf, open(bids_temp_filename, "w") as tmp_bdf:
             line_no = 1
             for line in bdf:
                 print(line)
@@ -163,6 +163,7 @@ class Bids(commands.Cog):
                 if len(bid_tmp) != 7:
                     print(f"Bid: {bid_tmp} should be 7 items in length. It is {len(bid_tmp)}")
                     await interaction.send(f"Bid: {bid_tmp} should be 7 items in length. It is {len(bid_tmp)} - skipping bid.")
+                    tmp_bdf.write(line)
                     continue
                 # Read bid entries
                 player_tmp = bid_tmp[3]
@@ -210,8 +211,10 @@ class Bids(commands.Cog):
                             # If all previous tests have failed, bid has not been submitted prior to passage of
                             # at least one bid close window
                             # Therefore bid is not yet good and must remain on the stack
-                            #bid_good = False
+                            # bid_good = False
                             # Temporarily force bid_good as true
+                            if debug_mode:
+                                print(f"Bad bid {bid_tmp} has been forcibly made good for debugging porpoises")
                             bid_good = True
 
                 # Handle good / bad bids appropriately
@@ -220,6 +223,8 @@ class Bids(commands.Cog):
                         print(f"Bid not yet implemented, bid time: {bid_time_tmp}, bid window closed: {bid_ct} (Player: {player_tmp}, Item: {item_tmp}, Points: {points_tmp} ")
                         await interaction.send(f"Bid not yet implemented, bid time: {bid_time_tmp}, bid window closed: {bid_ct} (Player: {player_tmp}, Item: {item_tmp}, Points: {points_tmp} ")
                         print(f"{date} - Bid success: {bid_success} \n Message out: {message_out}", file=open(log_filename, 'a'))
+                        # Retain bid details inside bid datafile
+                        tmp_bdf.write(line)
                         return
                 else:
                     # Check if bid is good using player, item, and points values
@@ -289,18 +294,23 @@ class Bids(commands.Cog):
                         # Print failure to log file
                         print(f"{bid_time_tmp} - Bid success: {bid_success} \n Message out: {message_out}", file=open(log_filename, 'a'))
 
+            # Replace bids file with temp bids file (which retains non-pushed bids) then delete temp file
+            # This cannot presently be tested due to 'force good' within this function
+            os.replace(bids_temp_filename, bids_filename)
+            os.remove(bids_temp_filename)
+
     # Function to enable admins to print pending bids - used for debugging
-    @nextcord.slash_command(name="print_bids", description="Prints out contents of pending bids datafile", guild_ids=[server_id])
-    async def print_bids(self, interaction: Interaction):
+    @nextcord.slash_command(name="print_pending_bids", description="Prints out contents of pending bids datafile", guild_ids=[server_id])
+    async def print_pending_bids(self, interaction: Interaction):
         # Function only accessible to admins
         role = nextcord.utils.get(interaction.guild.roles, name="Admin")
         if role in interaction.user.roles:
             if debug_mode:
-                print(f"{interaction.user.display_name} has the role {role} - may successfully use the /print_bids function")
+                print(f"{interaction.user.display_name} has the role {role} - may successfully use the /print_pending_bids function")
         else:
             await interaction.send("You must be an admin to use this command")
             if debug_mode:
-                print(f"{interaction.user.display_name} does not have the role {role} - may not use the /print_bids function")
+                print(f"{interaction.user.display_name} does not have the role {role} - may not use the /print_pending_bids function")
             return
 
         # Check that the bids file exists
@@ -321,9 +331,32 @@ class Bids(commands.Cog):
                         line_no = line_no + 1
         else:
             await interaction.send(f"Bids file ({bids_filename}) could not be located, please see logfile for debugging information")
-            print(f"Bids file {bids_filename} could not be located for print_bids function")
+            print(f"Bids file {bids_filename} could not be located for print_pending_bids function")
 
+    # Function to print existing bids on given item - used for debugging
+    @nextcord.slash_command(name="print_bids_item", description="Prints out contents of pending bids datafile", guild_ids=[server_id])
+    async def print_bids_item(self, interaction: Interaction, item):
+        # Function only accessible to admins
+        role = nextcord.utils.get(interaction.guild.roles, name="Admin")
+        if role in interaction.user.roles:
+            if debug_mode:
+                print(f"{interaction.user.display_name} has the role {role} - may successfully use the /print_bids_item function")
+        else:
+            await interaction.send("You must be an admin to use this command")
+            if debug_mode:
+                print(f"{interaction.user.display_name} does not have the role {role} - may not use the /print_bids_item function")
+            return
+        await interaction.send(f"Existing bids for item {item} requested", ephemeral=ephemeral)
 
+        # Check item exists
+        item_exists = check_item(item)
+        if not item_exists:
+            await interaction.send(f"Bids for {item} requested. {item} does not exist on the bids sheet. Please try again.", ephemeral=ephemeral)
+            return
+
+        # Find cell for item in question
+        all_bids = get_all_bids(item)
+        await interaction.send(f"All bids on {item}: {all_bids}", ephemeral=ephemeral)
     #########################################  BID FUNCTION #########################################
 
     # Function to add user bids (manual input)
