@@ -11,6 +11,7 @@ from HENMButtons import *
 from BattlefieldButtons import *
 from datetime import date, time, datetime
 import time
+import string
 from Sheets import *
 from utils import debug_mode, ephemeral, bids_filename, bid_close_filename, log_filename_pre, data_dir, bid_write, bids_temp_filename
 import os
@@ -101,7 +102,7 @@ class Bids(commands.Cog):
         date_push = datetime.now().strftime("%Y%m%d")
         time_push = datetime.now().strftime("%H:%M:%S")
 
-        log_filename = log_filename_pre + date
+        log_filename = log_filename_pre + date_push
 
         if debug_mode:
             print(f"It is {time_push}, the program will now examine the day's bids and push valid bids to sheet")
@@ -149,8 +150,6 @@ class Bids(commands.Cog):
             bid_ct = "19:00"
         await interaction.send(f"Bid close time for {date_push} : {bid_ct}")
 
-        # End of presently non-functional code-
-
         # If bids file exists and is not empty, open the file and loop through the contents line by line
         with open(bids_filename, "r") as bdf, open(bids_temp_filename, "w") as tmp_bdf:
             line_no = 1
@@ -158,9 +157,10 @@ class Bids(commands.Cog):
                 print(line)
                 await interaction.send(f"Line no: {line_no} : {line}")
                 bid_tmp = line
-
+                bid_tmp_with_tabs = bid_tmp.replace("\\t", "\t")
+                bid_tmp = bid_tmp_with_tabs.split("\t")
             # Check bid contains correct number of entries (7 items)
-                if len(bid_tmp) != 7:
+                if len(bid_tmp) != 8:
                     print(f"Bid: {bid_tmp} should be 7 items in length. It is {len(bid_tmp)}")
                     await interaction.send(f"Bid: {bid_tmp} should be 7 items in length. It is {len(bid_tmp)} - skipping bid.")
                     tmp_bdf.write(line)
@@ -294,10 +294,12 @@ class Bids(commands.Cog):
                         # Print failure to log file
                         print(f"{bid_time_tmp} - Bid success: {bid_success} \n Message out: {message_out}", file=open(log_filename, 'a'))
 
-            # Replace bids file with temp bids file (which retains non-pushed bids) then delete temp file
-            # This cannot presently be tested due to 'force good' within this function
-            os.replace(bids_temp_filename, bids_filename)
-            os.remove(bids_temp_filename)
+        # Replace bids file with temp bids file (which retains non-pushed bids) then delete temp file
+        # This cannot presently be tested due to 'force good' within this function
+        os.replace(bids_temp_filename, bids_filename)
+        if debug_mode:
+            print(f"push_bids function ended")
+        #os.remove(bids_temp_filename)
 
     # Function to enable admins to print pending bids - used for debugging
     @nextcord.slash_command(name="print_pending_bids", description="Prints out contents of pending bids datafile", guild_ids=[server_id])
@@ -390,7 +392,8 @@ class Bids(commands.Cog):
 
         # Transform player and item to title case - matches google sheets
         player = player.title()
-        bid_item = item.title()
+        # bid_item = item.title()
+        bid_item = string.capwords(item)
         bid_points = int(points)
         print(bid_points)
         bid_level = int(level)
@@ -404,7 +407,7 @@ class Bids(commands.Cog):
             bid = [bid_time_month, bid_time_date, bid_time_hm, player, bid_item, bid_points, bid_level]
             if debug_mode:
                 print(f"Bid to be written: {bid}")
-            # bid_write(bid)
+            bid_write(bid)
 
         else:
             await interaction.response.send_message(f"The attempt for {player} to bid {points} points on item {item} was unsuccessful\n {message_out}")
