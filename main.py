@@ -28,7 +28,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 
-# Bot start function - prints out to terminal to aid debugging if debug_mode is true
+# Bot start function - prints out to termina    l to aid debugging if debug_mode is true
 # Also opens logging file appropriately
 @bot.event
 async def on_ready():
@@ -144,6 +144,7 @@ async def test(interaction: Interaction):
 
 # Load relevant cogs to support bot
 bot.load_extension("cogs.Bids")
+bot.load_extension("cogs.Events")
 
 # Run bot from main
 if __name__ == '__main__':
