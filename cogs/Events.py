@@ -7,10 +7,13 @@ import logging
 
 PHP_URL_ADD_EVENT = 'https://www.meltdownxi.com/admin/add_event.php'
 PHP_URL_GET_EVENT_TYPES = 'https://www.meltdownxi.com/admin/get_event_types.php'
+PHP_URL_GET_PLAYERS = 'https://www.meltdownxi.com/admin/get_players.php'
+PHP_URL_GET_EVENTS = 'https://www.meltdownxi.com/admin/get_events.php'
 BOT_SECRET_KEY = bot_secret_key
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
+
 
 class DatePickerView(ui.View):
     def __init__(self):
@@ -103,7 +106,16 @@ class Events(commands.Cog):
 
     @nextcord.slash_command(name="add_event", description="Add an event", guild_ids=[server_id])
     async def add_event(self, interaction: Interaction, event_name: str):
+
         logging.info("add_event command invoked.")
+        role = nextcord.utils.get(interaction.guild.roles, name="Admin")
+        if role in interaction.user.roles:
+            logging.info(f"{interaction.user.display_name} has the role {role} - may successfully use the /event_test function")
+        else:
+            await interaction.send("You must be an admin to use this command")
+            logging.info(f"{interaction.user.display_name} does not have the role {role} - may not use the /push_bids function")
+            return
+
         response = requests.get(PHP_URL_GET_EVENT_TYPES)
         logging.info(f"PHP response status code for event types: {response.status_code}")
         if response.status_code == 200:
